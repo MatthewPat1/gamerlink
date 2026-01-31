@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+
+# DB Configs
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASS}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: public
+        format_sql: true
+    show-sql: true
+  flyway:
+    enabled: true
+
+# Identity Module Configs
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET}
+      issuer: ${APP_NAME}
+      access-ttl-minutes: ${JWT_ACCESS_TTL}
+    refresh-cookie:
+      name: ${REFRESH_COOKIE_NAME}
+      secure: false
+      same-site: LAX
+      path: /api/auth
+      refresh-ttl-days: ${REFRESH_TOKEN_TTL}

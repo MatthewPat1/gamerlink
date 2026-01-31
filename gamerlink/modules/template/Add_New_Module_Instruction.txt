@@ -1,0 +1,6 @@
+1. new module project folder mkdir -p modules/<module_name>/
+2. add <module>module_name</module> to root pom.xml
+3. Create modules/<module_name>/pom.xml, use the template pom.xml if easier
+4. Add dependency in app/pom.xml
+5. Add Flyway location in application.yml
+    classpath:db/migration/<module_name>
