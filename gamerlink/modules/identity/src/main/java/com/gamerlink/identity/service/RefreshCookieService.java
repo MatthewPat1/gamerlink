@@ -4,13 +4,9 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
-
-import java.security.SecureRandom;
-import java.util.Base64;
 
 @Service
 @Data
@@ -25,11 +21,11 @@ public class RefreshCookieService {
 
 
     public RefreshCookieService(
-            @Value("${app.security.refresh-cookie.name}") String cookieName,
-            @Value("${app.security.refresh-cookie.secure}") boolean secure,
-            @Value("${app.security.refresh-cookie.same-site}") String sameSite,
-            @Value("${app.security.refresh-cookie.path}") String path,
-            @Value("${app.security.refresh-cookie.refresh-ttl-days}") long refreshTtlDays
+            @Value("${identity.app.security.refresh-cookie.name}") String cookieName,
+            @Value("${identity.app.security.refresh-cookie.secure}") boolean secure,
+            @Value("${identity.app.security.refresh-cookie.same-site}") String sameSite,
+            @Value("${identity.app.security.refresh-cookie.path}") String path,
+            @Value("${identity.app.security.refresh-cookie.refresh-ttl-days}") long refreshTtlDays
     ){
         this.cookieName = cookieName;
         this.secure = secure;
@@ -68,19 +64,4 @@ public class RefreshCookieService {
         }
         return null;
     }
-
-    public String generateRefreshTokenValue() {
-        byte[] randomBytes = new byte[64];
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(randomBytes);
-        return Base64.getUrlEncoder()
-                .withoutPadding()
-                .encodeToString(randomBytes);
-    }
-
-    public  String hashToken(String token) {
-        return DigestUtils.sha256Hex(token);
-    }
-
-
 }

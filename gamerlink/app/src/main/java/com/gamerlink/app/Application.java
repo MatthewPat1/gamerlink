@@ -8,7 +8,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication(
         scanBasePackages = {
                 "com.gamerlink.app",
-                "com.gamerlink.identity"
+                "com.gamerlink.identity",
+                "com.gamerlink.shared"
                 // Add other modules as needed
         }
 )

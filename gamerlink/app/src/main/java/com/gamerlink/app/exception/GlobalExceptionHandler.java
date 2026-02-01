@@ -2,7 +2,10 @@ package com.gamerlink.app.exception;
 
 import com.gamerlink.app.dto.ApiErrorDTO;
 import com.gamerlink.identity.exception.AccountDisabledException;
+import com.gamerlink.identity.exception.InvalidCodeException;
 import com.gamerlink.identity.exception.InvalidCredentialsException;
+import com.gamerlink.shared.redis.RateLimitExceededException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -64,6 +68,38 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(InvalidCodeException.class)
+    public ResponseEntity<ApiErrorDTO> handleInvalidCode(InvalidCodeException ex){
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiErrorDTO.builder()
+                        .code("BAD_REQUEST")
+                        .error("Invalid Code")
+                        .timestamp(Instant.now())
+                        .status(HttpStatus.BAD_REQUEST.toString())
+                        .build()
+                );
+    }
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleRateLimitExceeded(RateLimitExceededException ex) {
+
+        HttpHeaders headers = new HttpHeaders();
+
+        // Add Retry-After header (in seconds)
+        if (!ex.getRetryAfter().isZero()) {
+            headers.add("Retry-After", String.valueOf(ex.getRetryAfter().getSeconds()));
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .headers(headers)
+                .body(Map.of(
+                        "error", "rate_limit_exceeded",
+                        "message", ex.getMessage(),
+                        "retry_after_seconds", ex.getRetryAfter().getSeconds(),
+                        "timestamp", Instant.now()
+                ));
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorDTO> handleUnexpected(Exception ex) {
         // log ex internally

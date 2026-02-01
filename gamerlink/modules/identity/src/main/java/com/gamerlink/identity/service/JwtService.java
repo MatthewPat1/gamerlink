@@ -25,9 +25,9 @@ public class JwtService {
     private final long accessTtlSeconds;
 
     public JwtService(
-            @Value("${app.security.jwt.secret}") String secret,
-            @Value("${app.security.jwt.issuer}") String issuer,
-            @Value("${app.security.jwt.access-ttl-minutes}") long accessTtlMin
+            @Value("${identity.app.security.jwt.secret}") String secret,
+            @Value("${identity.app.security.jwt.issuer}") String issuer,
+            @Value("${identity.app.security.jwt.access-ttl-minutes}") long accessTtlMin
     ) {
         this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
         this.issuer = issuer;
