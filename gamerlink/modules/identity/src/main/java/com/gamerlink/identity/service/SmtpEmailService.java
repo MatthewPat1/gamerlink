@@ -67,13 +67,13 @@ public class SmtpEmailService implements EmailService {
         sendEmail(email, subject, body);
     }
 
-    public void sendEmail(String email, String subject, String body){
+    public void sendEmail(String to, String subject, String body){
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
 
             helper.setFrom(from);
-            helper.setTo(email);
+            helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(body, true);
 

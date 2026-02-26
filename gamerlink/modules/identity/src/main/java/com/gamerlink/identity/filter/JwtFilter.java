@@ -1,6 +1,7 @@
 package com.gamerlink.identity.filter;
 
 import com.gamerlink.identity.service.JwtService;
+import com.gamerlink.shared.redis.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,6 +30,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtService jwtService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(
@@ -43,7 +45,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
             // If JWT exists and is valid, set authentication
             if (jwt != null && jwtService.validateToken(jwt)) {
-                authenticateUser(jwt, request);
+                String jti = jwtService.extractJti(jwt);
+                if (tokenBlacklistService.isBlacklisted(jti)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                }else{
+                    authenticateUser(jwt, request);
+                }
             }
         } catch (Exception e) {
             log.error("Cannot set user authentication: {}", e.getMessage());
@@ -58,6 +65,7 @@ public class JwtFilter extends OncePerRequestFilter {
      * Extract JWT token from Authorization header
      */
     private String extractJwtFromRequest(HttpServletRequest request) {
+
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
 
         if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {

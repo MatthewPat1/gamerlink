@@ -1,8 +1,8 @@
 package com.gamerlink.identity.service;
 
+import com.gamerlink.identity.dto.request.UpdateMeDTO;
 import com.gamerlink.identity.dto.response.MeDTO;
 import com.gamerlink.identity.dto.response.SessionDTO;
-import com.gamerlink.identity.dto.request.UpdateMeDTO;
 import com.gamerlink.identity.exception.UpdateUserException;
 import com.gamerlink.identity.model.RefreshToken;
 import com.gamerlink.identity.model.User;
@@ -13,6 +13,9 @@ import com.gamerlink.identity.repository.UserRoleRepository;
 import com.gamerlink.identity.util.PasswordUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,6 +36,7 @@ public class UserService {
 
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "users", key = "#userId")
     public MeDTO getUserById(UUID userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -41,6 +45,7 @@ public class UserService {
     }
 
     @Transactional
+    @CachePut(value = "users", key = "#userId")
     public MeDTO updateUser(UUID userId, UpdateMeDTO updateMeDTO) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -94,6 +99,11 @@ public class UserService {
                         .build())
                 .toList();
         return sessions;
+    }
+
+    @CacheEvict(value = "userProfile", key = "#userId")
+    public void evictUserCache(UUID userId) {
+        // no-op — annotation does the work
     }
 
     // Helper to identify current session

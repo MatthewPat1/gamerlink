@@ -13,6 +13,7 @@ import com.gamerlink.identity.util.SecureTokenGenerator;
 import com.gamerlink.shared.id.IdGenerator;
 import com.gamerlink.shared.redis.RateLimitExceededException;
 import com.gamerlink.shared.redis.RateLimiterService;
+import com.gamerlink.shared.redis.TokenBlacklistService;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,6 +45,8 @@ public class AuthService {
     private final PasswordResetChallengeRepository resetChallengeRepo;
     private final PasswordResetSessionRepository resetSessionRepo;
     private final ResetPasswordCookieService resetPasswordCookieService;
+    private final TokenBlacklistService tokenBlacklistService;
+    private final UserService userService;
     private final RateLimiterService rateLimiter;
     private final SmtpEmailService smtpEmailService;
     private final PasswordEncoder passwordEncoder;
@@ -138,6 +142,21 @@ public class AuthService {
                     .ifPresent(refreshRepo::delete);
         }
         refreshCookieService.clearRefreshCookie(response);
+
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String accessToken = authHeader.substring(7);
+            try {
+                String jti = jwtService.extractJti(accessToken);
+                Date expiry = jwtService.extractExpiration(accessToken);
+                tokenBlacklistService.blacklist(jti, expiry);
+                userService.evictUserCache(jwtService.extractUserId(accessToken));
+            } catch (Exception e) {
+                // Malformed token — still complete logout normally
+                log.warn("Could not blacklist access token during logout", e);
+            }
+        }
+
     }
 
     @Transactional

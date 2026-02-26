@@ -13,12 +13,12 @@ spring:
           auth: false
           starttls:
             enable: false
-  config:
-    import: optional:file:.env[.properties]
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USER}
     password: ${DB_PASS}
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -27,8 +27,25 @@ spring:
         default_schema: public
         format_sql: true
     show-sql: true
+
   flyway:
     enabled: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1ms
+        shutdown-timeout: 100ms
+  cache:
+    type: redis
 
 # Identity Module Configs
 identity:
@@ -47,7 +64,7 @@ identity:
         name: ${REFRESH_COOKIE_NAME}
         secure: false
         same-site: LAX
-        path: /api/auth
+        path: /api/v1/auth
         refresh-ttl-days: ${REFRESH_TOKEN_TTL}
       token:
         pepper: ${TOKEN_PEPPER}
@@ -56,27 +73,13 @@ identity:
       reset:
         subject: "Your GamerLink password reset code"
 
-shared:
-  app:
-    redis:
-      enabled: true
-    rate-limit:
-      fail-open: false  # Fail closed by default (deny on Redis failure)
-      global:
-        default-max-attempts: 100
-        default-window-seconds: 3600
+# Shared configs (used by shared module beans)
+app:
+  redis:
+    enabled: true
 
-  spring:
-    data:
-      redis:
-        host: ${REDIS_HOST:localhost}
-        port: ${REDIS_PORT:6379}
-        password: ${REDIS_PASSWORD:}
-        timeout: 2000ms
-        lettuce:
-          pool:
-            max-active: 8
-            max-idle: 8
-            min-idle: 2
-            max-wait: -1ms
-          shutdown-timeout: 100ms
+rate-limit:
+  fail-open: false
+  global:
+    default-max-attempts: 100
+    default-window-seconds: 3600

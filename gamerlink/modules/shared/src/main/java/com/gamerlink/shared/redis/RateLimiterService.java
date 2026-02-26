@@ -4,9 +4,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -14,13 +16,21 @@ public class RateLimiterService {
 
     private static final Logger log = LoggerFactory.getLogger(RateLimiterService.class);
     private static final String KEY_PREFIX = "ratelimit:";
+    private static final String INCR_AND_EXPIRE_SCRIPT = """
+    local count = redis.call('INCR', KEYS[1])
+    if count == 1 then
+        redis.call('EXPIRE', KEYS[1], ARGV[1])
+    end
+    return count
+    """;
 
     private final RedisTemplate<String, String> redisTemplate;
     private final RateLimitConfig config;
 
     // IMPORTANT: this must be the String-based template (rateLimitRedisTemplate)
     public RateLimiterService(
-            @Qualifier("rateLimitRedisTemplate") RedisTemplate<String, String> rateLimitRedisTemplate,
+            @Qualifier("rateLimitRedisTemplate")
+            RedisTemplate<String, String> rateLimitRedisTemplate,
             RateLimitConfig config) {
         this.redisTemplate = rateLimitRedisTemplate;
         this.config = config;
@@ -46,37 +56,21 @@ public class RateLimiterService {
      */
     public boolean isAllowed(String key, int maxAttempts, Duration window) {
         String redisKey = KEY_PREFIX + key;
-
         try {
-            Long currentCount = redisTemplate.opsForValue().increment(redisKey);
+            RedisScript<Long> script = RedisScript.of(INCR_AND_EXPIRE_SCRIPT, Long.class);
+            Long count = redisTemplate.execute(script,
+                    List.of(redisKey),
+                    String.valueOf(window.getSeconds()));
 
-            if (currentCount == null) {
-                log.warn("Redis increment returned null for redisKey: {}", redisKey);
-                return handleRedisFailure();
-            }
-
-            // TTL safety: ensure a TTL always exists (prevents "forever" keys if EXPIRE is skipped due to crash)
-            Long ttl = redisTemplate.getExpire(redisKey, TimeUnit.SECONDS);
-            if (ttl == null || ttl < 0) {
-                redisTemplate.expire(redisKey, window.getSeconds(), TimeUnit.SECONDS);
-            }
-
-            boolean allowed = currentCount <= maxAttempts;
-
-            if (!allowed) {
-                // Do not log raw PII - caller should pass hashed key anyway
-                log.warn("Rate limit exceeded for redisKey: {} (count: {}/{})",
-                        redisKey, currentCount, maxAttempts);
-            }
-
+            boolean allowed = count <= maxAttempts;
+            if (!allowed) log.warn("Rate limit exceeded for key: {} ({}/{})", redisKey, count, maxAttempts);
             return allowed;
 
         } catch (Exception e) {
-            log.error("Redis error in rate limiter for redisKey: {}", redisKey, e);
+            log.error("Redis error in rate limiter for key: {}", redisKey, e);
             return handleRedisFailure();
         }
     }
-
     /**
      * Get remaining attempts for a key
      */

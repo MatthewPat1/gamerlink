@@ -40,6 +40,7 @@ public class JwtService {
         return Jwts.builder()
                 .issuer(issuer)
                 .subject(userId.toString())
+                .claim("jti", UUID.randomUUID().toString())
                 .claim("roles", roles)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusSeconds(accessTtlSeconds)))
@@ -82,13 +83,18 @@ public class JwtService {
                 .isBefore(Instant.now());
     }
 
-    private Date extractExpiration(String token) {
+    public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+
+    public String extractJti(String token){
+        return extractClaim(token, claims -> claims.get("jti", String.class));
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> resolver) {
         return resolver.apply(extractAllClaims(token));
     }
+
 
     private Claims extractAllClaims(String token) {
         return Jwts.parser()

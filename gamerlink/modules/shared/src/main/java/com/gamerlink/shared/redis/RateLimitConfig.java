@@ -1,10 +1,7 @@
 package com.gamerlink.shared.redis;
 
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
 @ConfigurationProperties(prefix = "app.rate-limit")
 public class RateLimitConfig {
 
