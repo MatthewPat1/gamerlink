@@ -1,5 +1,6 @@
 package com.gamerlink.identity.model;
 
+import com.gamerlink.shared.id.UUIDv7GeneratedValue;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,6 +20,7 @@ public class User {
     @Id
     @Column(nullable = false, updatable = false)
     @EqualsAndHashCode.Include
+    @UUIDv7GeneratedValue
     private UUID id;
 
     @Column(nullable = false, unique = true, length = 255)

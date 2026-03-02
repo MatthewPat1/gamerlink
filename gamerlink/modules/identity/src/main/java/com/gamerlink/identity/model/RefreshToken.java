@@ -1,5 +1,6 @@
 package com.gamerlink.identity.model;
 
+import com.gamerlink.shared.id.UUIDv7GeneratedValue;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -16,6 +17,7 @@ import java.util.UUID;
 public class RefreshToken {
     @Id
     @Column(nullable = false, updatable = false)
+    @UUIDv7GeneratedValue
     private UUID id;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

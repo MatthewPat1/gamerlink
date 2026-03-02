@@ -10,19 +10,22 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         scanBasePackages = {
                 "com.gamerlink.app",
                 "com.gamerlink.identity",
+                "com.gamerlink.profile",
                 "com.gamerlink.shared"
                 // Add other modules as needed
         }
 )
 @EnableJpaRepositories(
         basePackages = {
-                "com.gamerlink.identity.repository"
+                "com.gamerlink.identity.repository",
+                "com.gamerlink.profile.repository"
                 // Add other module repositories
         }
 )
 @EntityScan(
         basePackages = {
-                "com.gamerlink.identity.model"
+                "com.gamerlink.identity.model",
+                "com.gamerlink.profile.model"
                 // Add other module entities
         }
 )

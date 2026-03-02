@@ -1,5 +1,6 @@
 package com.gamerlink.identity.model;
 
+import com.gamerlink.shared.id.UUIDv7GeneratedValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -19,6 +20,7 @@ import java.util.UUID;
 public class PasswordResetSession {
 
     @Id
+    @UUIDv7GeneratedValue
     private UUID id;
 
     @Column(nullable = false)
@@ -33,8 +35,7 @@ public class PasswordResetSession {
     private Instant usedAt;
 
     @Builder
-    public PasswordResetSession(UUID id, UUID userId, String sessionHash, Instant expiresAt) {
-        this.id = id;
+    public PasswordResetSession(UUID userId, String sessionHash, Instant expiresAt) {
         this.userId = userId;
         this.sessionHash = sessionHash;
         this.expiresAt = expiresAt;

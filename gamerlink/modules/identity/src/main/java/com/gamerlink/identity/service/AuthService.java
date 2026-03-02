@@ -10,7 +10,6 @@ import com.gamerlink.identity.repository.*;
 import com.gamerlink.identity.util.PasswordUtils;
 import com.gamerlink.identity.util.RequestResponseHelper;
 import com.gamerlink.identity.util.SecureTokenGenerator;
-import com.gamerlink.shared.id.IdGenerator;
 import com.gamerlink.shared.redis.RateLimitExceededException;
 import com.gamerlink.shared.redis.RateLimiterService;
 import com.gamerlink.shared.redis.TokenBlacklistService;
@@ -65,9 +64,7 @@ public class AuthService {
             throw new IllegalArgumentException("Email already in use");
         }
 
-        UUID userId = IdGenerator.newId();
         User user = User.builder()
-                .id(userId)
                 .email(registerDTO.getEmail().toLowerCase().trim())
                 .passwordHash(passwordEncoder.encode(registerDTO.getPassword()))
                 .build();
@@ -79,7 +76,7 @@ public class AuthService {
                 .build();
         roleRepo.save(role);
 
-        return issueTokensAndSetCookie(userId, request, response);
+        return issueTokensAndSetCookie(user.getId(), request, response);
     }
 
     public AuthenticationDTO login(@Valid LoginDTO loginDTO, HttpServletRequest request,HttpServletResponse response) {
@@ -187,7 +184,6 @@ public class AuthService {
         // save refresh in DB
         User user = entityManager.getReference(User.class, userId);
         RefreshToken rt = RefreshToken.builder()
-                .id(IdGenerator.newId())
                 .user(user)
                 .tokenHash(hashed)
                 .userAgent(userAgent)
@@ -233,12 +229,11 @@ public class AuthService {
             resetChallengeRepo.invalidateActiveForUser(user.getId(), now);
 
             String codeHash = tokenHashingService.sha256Base64(code);
-            PasswordResetChallenge challenge = new PasswordResetChallenge(
-                    IdGenerator.newId(),
-                    user.getId(),
-                    codeHash,
-                    Instant.now().plus(Duration.ofMinutes(10))
-            );
+            PasswordResetChallenge challenge = PasswordResetChallenge.builder()
+                    .userId(user.getId())
+                    .codeHash(codeHash)
+                    .expiresAt(Instant.now().plus(Duration.ofMinutes(10)))
+                    .build();
 
             resetChallengeRepo.save(challenge);
             smtpEmailService.sendResetCode(user.getEmail(), code);
@@ -291,13 +286,11 @@ public class AuthService {
         String rawSession = secureTokenGenerator.generate(64);
         String sessionHash = tokenHashingService.sha256Base64(rawSession);
 
-        PasswordResetSession session =
-                new PasswordResetSession(
-                        IdGenerator.newId(),
-                        user.getId(),
-                        sessionHash,
-                        now.plus(Duration.ofMinutes(15))
-                );
+        PasswordResetSession session = PasswordResetSession.builder()
+                .userId(user.getId())
+                .sessionHash(sessionHash)
+                .expiresAt(now.plus(Duration.ofMinutes(15)))
+                .build();
 
         resetSessionRepo.save(session);
         return resetPasswordCookieService.create(rawSession);

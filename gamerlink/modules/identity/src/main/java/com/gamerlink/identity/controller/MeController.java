@@ -4,7 +4,7 @@ import com.gamerlink.identity.dto.response.MeDTO;
 import com.gamerlink.identity.dto.response.SessionDTO;
 import com.gamerlink.identity.dto.request.UpdateMeDTO;
 import com.gamerlink.identity.service.UserService;
-import com.gamerlink.identity.util.SecurityContextHelper;
+import com.gamerlink.shared.util.SecurityContextHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -4,6 +4,10 @@ import com.gamerlink.app.dto.ApiErrorDTO;
 import com.gamerlink.identity.exception.AccountDisabledException;
 import com.gamerlink.identity.exception.InvalidCodeException;
 import com.gamerlink.identity.exception.InvalidCredentialsException;
+import com.gamerlink.profile.exception.HandleAlreadyTakenException;
+import com.gamerlink.profile.exception.HandleImmutableException;
+import com.gamerlink.profile.exception.InvalidGameReferenceException;
+import com.gamerlink.profile.exception.ProfileNotFoundException;
 import com.gamerlink.shared.redis.RateLimitExceededException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -12,6 +16,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.time.Instant;
 import java.util.Map;
@@ -100,6 +105,59 @@ public class GlobalExceptionHandler {
                         "timestamp", Instant.now()
                 ));
     }
+
+    @ExceptionHandler(ProfileNotFoundException.class)
+    public ResponseEntity<ApiErrorDTO> handleNotFound(ProfileNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiErrorDTO.builder()
+                        .code("NOT_FOUND")
+                        .error(ex.getMessage())
+                        .timestamp(Instant.now())
+                        .status(HttpStatus.NOT_FOUND.toString())
+                        .build()
+                );
+    }
+
+    @ExceptionHandler({HandleAlreadyTakenException.class})
+    public ResponseEntity<ApiErrorDTO> handleConflict(RuntimeException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiErrorDTO.builder()
+                        .code("CONFLICT")
+                        .error(ex.getMessage())
+                        .timestamp(Instant.now())
+                        .status(HttpStatus.CONFLICT.toString())
+                        .build()
+                );
+    }
+
+    @ExceptionHandler({HandleImmutableException.class, InvalidGameReferenceException.class})
+    public ResponseEntity<ApiErrorDTO> handleUnprocessable(RuntimeException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiErrorDTO.builder()
+                        .code("UNPROCESSABLE ENTITY")
+                        .error(ex.getMessage())
+                        .timestamp(Instant.now())
+                        .status(HttpStatus.UNPROCESSABLE_ENTITY.toString())
+                        .build()
+                );
+    }
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ApiErrorDTO> handleNoHandler(NoHandlerFoundException ex){
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiErrorDTO.builder()
+                        .code("NOT_FOUND")
+                        .error(ex.getMessage())
+                        .timestamp(Instant.now())
+                        .status(HttpStatus.UNPROCESSABLE_ENTITY.toString())
+                        .build()
+                );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorDTO> handleUnexpected(Exception ex) {
         // log ex internally
@@ -110,7 +168,7 @@ public class GlobalExceptionHandler {
                         .code("INTERNAL_ERROR")
                         .timestamp(Instant.now())
                         .status(HttpStatus.INTERNAL_SERVER_ERROR.toString())
-                        .error("Unexpected error will be logged and looked into")
+                        .error(ex.getMessage())
                         .build());
     }
 }

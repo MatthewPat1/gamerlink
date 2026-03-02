@@ -1,5 +1,6 @@
 package com.gamerlink.identity.model;
 
+import com.gamerlink.shared.id.UUIDv7GeneratedValue;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -19,6 +20,7 @@ import java.util.UUID;
 public class PasswordResetChallenge {
 
     @Id
+    @UUIDv7GeneratedValue
     private UUID id;
 
     @Column(nullable = false)
@@ -42,8 +44,7 @@ public class PasswordResetChallenge {
     private int attemptCount = 0;
 
     @Builder
-    public PasswordResetChallenge(UUID id, UUID userId, String codeHash, Instant expiresAt) {
-        this.id = id;
+    public PasswordResetChallenge(UUID userId, String codeHash, Instant expiresAt) {
         this.userId = userId;
         this.channel = "EMAIL";
         this.codeHash = codeHash;

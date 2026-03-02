@@ -1,4 +1,4 @@
-package com.gamerlink.identity.util;
+package com.gamerlink.shared.util;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
