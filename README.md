@@ -49,7 +49,7 @@ Responsible for authentication and minimal user identity.
 - Handles, display names, bios, regions, and social links
 - Gamer-specific data (games played, roles, ranks, platforms)
 - Public profile viewing and editing your own profile
-- Status: Planned
+- Status: Actively Implementing
 
 ### Connections (Networking)
 
