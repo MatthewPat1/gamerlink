@@ -4,6 +4,7 @@ import com.gamerlink.app.dto.ApiErrorDTO;
 import com.gamerlink.identity.exception.AccountDisabledException;
 import com.gamerlink.identity.exception.InvalidCodeException;
 import com.gamerlink.identity.exception.InvalidCredentialsException;
+import com.gamerlink.media.exception.AssetValidationException;
 import com.gamerlink.profile.exception.HandleAlreadyTakenException;
 import com.gamerlink.profile.exception.HandleImmutableException;
 import com.gamerlink.profile.exception.InvalidGameReferenceException;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
@@ -111,7 +113,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(ApiErrorDTO.builder()
-                        .code("NOT_FOUND")
                         .error(ex.getMessage())
                         .timestamp(Instant.now())
                         .status(HttpStatus.NOT_FOUND.toString())
@@ -124,7 +125,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ApiErrorDTO.builder()
-                        .code("CONFLICT")
                         .error(ex.getMessage())
                         .timestamp(Instant.now())
                         .status(HttpStatus.CONFLICT.toString())
@@ -137,7 +137,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(ApiErrorDTO.builder()
-                        .code("UNPROCESSABLE ENTITY")
                         .error(ex.getMessage())
                         .timestamp(Instant.now())
                         .status(HttpStatus.UNPROCESSABLE_ENTITY.toString())
@@ -148,9 +147,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ApiErrorDTO> handleNoHandler(NoHandlerFoundException ex){
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(ApiErrorDTO.builder()
-                        .code("NOT_FOUND")
                         .error(ex.getMessage())
                         .timestamp(Instant.now())
                         .status(HttpStatus.UNPROCESSABLE_ENTITY.toString())
@@ -158,6 +156,29 @@ public class GlobalExceptionHandler {
                 );
     }
 
+    @ExceptionHandler(AssetValidationException.class)
+    public ResponseEntity<ApiErrorDTO> handleAssetValid(AssetValidationException ex){
+        return ResponseEntity
+                .status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiErrorDTO.builder()
+                        .error(ex.getMessage())
+                        .timestamp(Instant.now())
+                        .status(HttpStatus.UNPROCESSABLE_ENTITY.toString())
+                        .build()
+                );
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorDTO> handleValidationError(MethodArgumentNotValidException ex){
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiErrorDTO.builder()
+                        .error(ex.getMessage())
+                        .timestamp(Instant.now())
+                        .status(HttpStatus.UNPROCESSABLE_ENTITY.toString())
+                        .build()
+                );
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorDTO> handleUnexpected(Exception ex) {
         // log ex internally

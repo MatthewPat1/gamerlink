@@ -48,10 +48,11 @@ public class SecurityConfig {
                                 "/api/v1/auth/refresh", "/api/v1/auth/password/reset/start",
                                 "/api/v1/auth/password/reset/verify", "/api/v1/auth/password/reset/complete"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/me", "/api/v1/me/sessions").authenticated()
+//                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
+//                        .requestMatchers(HttpMethod.GET, "/api/v1/me", "/api/v1/me/sessions").authenticated()
                         .requestMatchers("/api/v1/me/profile/**").authenticated()
                         .requestMatchers("/api/v1/profiles/**").permitAll()
+//                        .requestMatchers("/api/v1/media/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

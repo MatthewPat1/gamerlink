@@ -73,6 +73,53 @@ identity:
       reset:
         subject: "Your GamerLink password reset code"
 
+media:
+  storage:
+    env: ${SPRING_PROFILES_ACTIVE:local}
+    bucket: ${MEDIA_BUCKET:gamerlink-media}
+    endpoint: ${STORAGE_ENDPOINT:http://localhost:9000}
+    region: ${AWS_REGION:us-east-1}
+    access-key: ${STORAGE_ACCESS_KEY:minioadmin}
+    secret-key: ${STORAGE_SECRET_KEY:minioadmin}
+    cdn-base-url: ${CDN_BASE_URL:http://localhost:9000/gamerlink-media}
+
+  upload:
+    presigned-url-expiry-seconds: ${PRESIGNED_URL_EXPIRY:900}
+
+  external-links:
+    allowed-domains: twitch.tv,clips.twitch.tv,youtube.com,youtu.be
+
+  scheduler:
+    orphan-cleanup-interval-ms: 1800000
+    deletion-cron: "0 0 2 * * *"
+
+  validation:
+    types:
+      avatar:
+        max-size-bytes: 5242880
+        allowed-mime-types:
+          - image/jpeg
+          - image/webp
+          - image/png
+      banner:
+        max-size-bytes: 10485760
+        allowed-mime-types:
+          - image/jpeg
+          - image/webp
+          - image/png
+      screenshot:
+        max-size-bytes: 15728640
+        allowed-mime-types:
+          - image/jpeg
+          - image/webp
+          - image/png
+      clip:
+        max-size-bytes: 524288000
+        allowed-mime-types:
+          - video/mp4
+          - video/webm
+
+
 # Shared configs (used by shared module beans)
 app:
   redis:
@@ -83,3 +130,5 @@ rate-limit:
   global:
     default-max-attempts: 100
     default-window-seconds: 3600
+
+
